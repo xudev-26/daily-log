@@ -1,6 +1,4 @@
 from array import array
-import math
-import re
 import random
 
 
@@ -80,21 +78,32 @@ def validate(strength, health, armor):
 def fight(enemy_strength, enemy_health, enemy_armor, enemy_exp, strength, health):
 
     while enemy_health > 0 and health[0] > 0:
-        print("\n1 Attack")
-        print("\n2 Escape")
+        print("1. Fight\n2 Escape")
         choice = input("Enter your choice(1/2): ")
 
         if choice == "1":
             enemy_health -= strength[0]
+            print(f"You dealt {strength[0]} damage!")
 
+        if enemy_health > 0:
+            health[0] -= enemy_strength
+            print(f"The enemy dealth {enemy_strength} damage")
 
-        print(f"You dealt {strength[0]} damage!")
+        if health[0] <= 0:
+            break
 
         if enemy_health <= 0:
             print("You defeated the enemy")
+        
+        elif choice == "2":
+            print("What a Coward")
+            break
+        
+
+            
 
 
-def enemies(strength, health):
+def enemies(strength, health, level):
     level1 = {
         "grimfang": [35, 8, 4, 15],
         "duskhound": [30, 9, 3, 12],
@@ -156,9 +165,64 @@ def enemies(strength, health):
         "ironmauler": [200, 23, 34, 125]
     }
 
-    level = [level1, level2, level3, level4, level5]
+    all_levels = [level1, level2, level3, level4,  level5]
+    current_level_index = 0
 
-    for level_index, enemy_group in enumerate(level):
-        for name, enemy_stats in enemy_group.items():
+    while health[0]>0  and current_level_index < len(all_levels):
+        current_enemy_group = all_levels[current_level_index]
+
+        for name, enemy_stats in current_enemy_group.items():
             enemy_strength, enemy_health, enemy_armor, enemy_exp = enemy_stats
+
             fight(enemy_strength, enemy_health, enemy_armor, enemy_exp, strength, health)
+
+            if health[0] <= 0:
+                print("Game Over! The horde overwhelmed you.")
+                break
+
+        if health[0] > 0:
+            print(f"Level {current_level_index + 1} Cleared!")
+            level[0] += 1
+            strength[0] += enemy_strength
+            current_level_index += 1
+
+def main():
+    print("Welcome to Invented Game i made for Fun")
+    strength = array("i", [15])
+    health = array("i", [100])
+    armor = array("i", [100])
+    level = array("i", [1])
+
+    
+    while True:
+        print("1. Proceed")
+        print("2. Quit")
+        choose = input("Pick your choice: ")
+        
+
+        if not choose.isdigit():
+            print("Please enter a valid number")
+            continue
+
+        transform = int(choose)
+
+        
+        display(strength, health, armor, level)
+        if transform == 1:
+            enemies(strength, health, level)
+        
+        else:
+            print("Coward!")
+            break
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+    
+        
+
+
+
