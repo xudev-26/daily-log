@@ -201,12 +201,165 @@ def login_screen():
             if acc_user == username and acc_pass == password:
                 print(f"\n  Login successful! Welcome, {display_name}!")
                 pause()
-                return {"id": acc_id, "username": acc_user, "role": role, "name": display_name}
+                return {"id": acc_id, 
+                        "username": acc_user, 
+                        "role": role, 
+                        "name": display_name}
 
     print("\n  Invalid username or password!")
     print("  Sample: admin/admin123 | player1/player123")
     pause()
     return None
+
+# ========================= CRUD OPERATIONS =========================
+
+def crud_menu(title, filename, fields_display, sample_data_func):
+    
+    while True:
+        clear_screen()
+        print_header(f"FILE MAINTENANCE - {title.upper()}")
+        print("  [1] Add Record")
+        print("  [2] View All Records")
+        print("  [3] Search Record")
+        print("  [4] Update Record")
+        print("  [5] Delete Record")
+        print("  [6] Back")
+        print("=" * 60)
+
+        choice = input("Enter choice: ").strip()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def add_record(fiilename, field_display, sample_data_func):
+    clear_screen()
+    print_header("ADD RECORD")
+
+    existing_id = get_existing_ids(filename)
+    new_id = generate_id(existing_id)
+    print(f"  Generated ID: {new_id}")
+
+    fields = [new_id]
+    for field_name in field_display[1:]:
+        value = input(f" Enter {field_name}: ").strip()
+        if not value:
+            print(f"  {field_name} cannot be empty!")
+            pause()
+            return
+        fields.append(value)
+
+    record_line = format_record(fields)
+    append_to_file(filename, record_line)
+    print(f"\n Record added successfully! ID: {new_id}")
+    pause()
+
+def view_all_records(filename, title):
+    clear_screen()
+    print_header(f"ALL {title.upper()} RECORDS")
+
+    lines = read_file_lines(filename)
+    if not lines:
+        print("No records found")
+    else:
+        for i, line in enumerate(lines, 1):
+            parts = parse_record(line)
+            print(f" [{i}] {' | '.join(parts)}")
+
+    print(f"\n Total Records: {len(lines)}")
+    pause()
+
+def search_record(filename, title):
+    clear_screen()
+    print_header(f"SEARCH {title.upper()}")
+
+    search_id = input("Enter ID to search: ").strip()
+    idx, record = find_record_by_id(filename, search_id)
+
+    if record:
+        print("\n Record Found:")
+        print(f" {' | '.join(record)}")
+    else:
+        print("\n Record not found!")
+
+    pause()
+
+def update_record(filename, fields_display):
+    clear_screen()
+    print_header("UPDATE RECORD")
+
+    update_id = input("  Enter ID to update: ").strip()
+    idx, record = find_record_by_id(filename, update_id)
+
+    if idx == -1:
+        print("\n  Record not found!")
+        pause()
+        return
+    
+    print(f" Current Record: {' | '.join(record)}")
+    print("  Enter new values (press Enter to keep current value):\n")
+
+    new_record = [record[0]]
+    for i, field_name in enumerate(fields_display[1:], 1):
+        current = record[i] if i < len(record) else ""
+        new_value = input(f" {fieldn_name} [{current}]: ").strip()
+        new_record.append(new_value if new_value else current)
+
+    lines = read_file_lines(filename)
+    lines[idx] = format_record(new_record)
+    write_file_lines(filename, lines)
+    
+    print("\n  Record updated successfully!")
+    pause()
+
+
+def delete_record(filename, title):
+    clear_screen()
+    print_header("DELETE RECORD")
+
+    delete_id = input("  Enter ID to delete: ").strip()
+    idx, record = find_record_by_id(filename, delete_id)
+
+    if idx == -1:
+        print("\n Record not found!")
+        pause()
+        return
+
+    print(f"\n  Record to delete: {' | '.join(record)}")
+    confirm = input("  Are you sure? (y/n): ").strip().lower()
+
+    if confirm == 'y':
+        lines = read_file_lines(filename)
+        line.pop(idx)
+        write_file_lines(filename, lines)
+        print("\n  Record deleted successfully!")
+    else:
+        print("\n  Deletion cancelled.")
+    
+    pause()
+
+
+
+
+
+
+
+
+
+
 
 
             
