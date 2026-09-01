@@ -6,11 +6,13 @@ from datetime import datetime
 files = {
     "accounts": "account.txt",
     "enemies": "enemies.txt",
+    "items": "items.txt",
     "rooms": "rooms.txt",
     "questions": "questions.txt",
     "player_progress": "player_progress.txt",
     "battle_history": "battle_history.txt",
     "enemy_difficulty": "enemy_difficulty.txt",
+    "starting_items": "starting_items.txt",
     "starting_enemies": "starting_enemies.txt",
     "defeated_enemies": "defeated_enemies.txt",
     "boss_status": "boss_status.txt",
@@ -227,24 +229,24 @@ def crud_menu(title, filename, fields_display, sample_data_func):
         print("=" * 60)
 
         choice = input("Enter choice: ").strip()
+        
+        if choice == "1":
+            add_record(filename, field_display, sample_data_func)
+        elif choice == "2":
+            view_all_records(filename, title)
+        elif choice == "3":
+            search_record(filename, title)
+        elif choice == "4":
+            update_record(filename, fields_display)
+        elif choice == "5":
+            delete_record(filename, title)
+        elif choice == "6":
+            break
+        else:
+            print("  Invalid choice!")
+            pause()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        
 def add_record(fiilename, field_display, sample_data_func):
     clear_screen()
     print_header("ADD RECORD")
@@ -351,24 +353,241 @@ def delete_record(filename, title):
     
     pause()
 
+# ========================= FILE MAINTENANCE MODULES =========================
 
 
+def player_account_maintenance():
+    crud_menu("Player Account Maintenance", files["accounts"], 
+    ["ID", "Name", "HP", "Attack", "Gold Reward", "Score Reward", "Is Boss", "Difficulty"], None)
+
+def enemy_maintenance():
+    crud_menu("Enemy maintenance", files["enimies"],
+     ["ID", "Name", "HP", "Attack", "Gold Reward", "Score Reward", "Is Boss", "Difficulty"], None)
+
+def item_maintenance():
+    crud_menu("Item Maintenance", files["items"], 
+    ["ID", "Name", "Type", "Effect Value", "Description"], None)
+
+def room_maintenance():
+    crud_menu("Room Maintenance", files["rooms"], 
+    ["ID", "Name", "Description", "Trap Damage", "Has Enemy", "Has Item"], None)
+
+def question_maintenance():
+    crud_menu("Question and Challenge Maintenance", files["questions"],
+    ["ID", "Question", "Option A", "Option B", "Option C", "Option D", "Correct Answer"], None)
 
 
+# ========================= GAME SETUP AND MANAGEMENT =========================
+
+def game_setup_menu():
+    while True:
+        clear_screen()
+        print_header("GAME SETUP AND MANAGEMENT")
+        print_header("GAME SETUP AND MANAGEMENT")
+        print("  [1] View Player Progress")
+        print("  [2] Reset Player Game Data")
+        print("  [3] Assign Starting Items")
+        print("  [4] Set Enemy Difficulty")
+        print("  [5] View Battle History")
+        print("  [6] Back")
+        print("=" * 60)
+
+        choice = input(" Enter choice: ").strip()
+
+        if choice == "1":
+            view_player_progress()
+        elif choice == "2":
+            reset_player_game_data()
+        elif choice == "3":
+            assign_starting_items()
+        elif choice == "4":
+            set_enemy_difficulty()
+        elif choice == "5":
+            view_battle_history()
+        elif choice == "6":
+            break
+        else:
+            print("  Invalid choice!")
+            pause()
+
+        
+
+def view_player_prog():
+    clear_screen()
+    print_header("VIEW PLAYER PROGRESS")
+
+    lines = read_file_lines(files["player_progress"])
+    if not lines:
+        print(" No player progress found. ")
+    else:
+        print(f"""{'ID':<5}{'Name':<18}{'HP':<8}
+        {'MaxHP':<8}{'Atk':<6}{'Pot':<6}{'Gold':<8}
+        {'Score':<8}{'Room':<6}{'Boss':<6}""")
+
+        print("-" * 80)
+        for line in lines:
+            parts = parse_record(line)
+            if len(parts) >= 10:
+                print(f"""{parts[0]:<5}{parts[1]:<18}{parts[2]:<8}{parts[3]:<8}
+                {parts[4]:<6}{parts[5]:<6}{parts[6]:<8}{parts[7]:<8}{parts[8]:<6}
+                {parts[9]:<6}""")
+
+    pause()
+
+def reset_data():
+    clear_screen()
+    print_header("RESET PLAYER GAME DATA")
+
+    player_id = input("  Enter Player ID to reset: ").strip()
+    idx, record = find_record_by_id(files["player_progress"], player_id)
+
+    if idx == -1:
+        print("\n  Player not found!")
+        pause()
+        return
+    
+    print(f"\n Player: {record[1]}")
+    confirm = input(" Reset all game data? (y/n): ").strip().lower()
+
+    if confirm == "y":
+        lines = read_file_lines(files["player_progress"])
+        name = record[1]
+        new_record = [player_id, name, "100", "100", "10", "2", "0", "0", "1", "No"]
+        line[idx] = format_record(new_record)
+        write_file_lines(files["player_progress"], lines)
+
+        #defeated enimies that player has killed
+        def_lines = read_file_lines(files["defeated_enemies"])
+        def_lines = [l for l in def_lines if not l.startswith(player_id + " | ")]
+        write_file_lines(files["defeated_enemies"], def_lines)
+
+        #reset boss
+        boss_lines = read_file_lines(files["boss_status"])
+        for i, line in enumerate(boss_lines):
+            if line.starswith(player_id + " | "):
+                boss_lines[i] = f"{player_id}|No|N/A"
+        write_file_lines(files["boss_status"], boss_lines)
+
+        print("\n Player game data reset successfully!")
+
+    else:
+        print("\n  Reset cancelled.")
+
+    pause()
+
+def assign_items():
+    clear_screen()
+    print_header("ASSIGN STARTING ITEMS")
+
+    player_id = input(" Enter Player ID: ").strip()
+    idx, player = find_record_by_id(files["player_progress"], player_id)
+
+    if idx == -1:
+        print("\n  Player not found!")
+        pause()
+        return
+    
+    print(f"\n  Player: {player[1]}")
+    print("\n  Available Items:")
+
+    item_lines = read_file_lines(files["items"])
+    for line in item_lines:
+        parts = parse_record(line)
+        parts = parse_record(line)
+        print(f"  {parts[0]}. {parts[1]} ({parts[2]})")
+
+    item_id = input("\n Enter item ID: ").strip()
+    quantity = input(" Enter Quantity: ").strip()
+
+    item_idx, item = find_record_by_id(files["items"], item_id)
+    if item_idx == -1:
+        print("\n Item not found!")
+        pause()
+        return
+
+    #update items that player starts with
+    start_lines = [l for l in start_lines if not (l.startswith(player_id + " | ") and parse_record(l)[1] == item_id)]
+
+    start_lines.append(f"{player_id}|{item_id}|{item[1]}|{quantity}")
+    write_file_lines(files["starting_items"], start_lines)
+
+    print(f"\n  Assigned {quantity}x {item[1]} to {player[1]}!")
+    pause()
+
+def set_enemy_diff():
+    clear_screen()
+    print_header("SET ENEMY DIFFICULTY")
+
+    enemy_id = input(" Enter Enemy ID: ").strip()
+    idx, enemy = find_record_by_id(files["enemies", enemy_id])
+
+    if idx == -1:
+        print("\n  Enemy not found!")
+        pause()
+        return
+
+    print(f"\n  Enemy: {enemy[1]}")
+    print("  Difficulty Levels: Easy, Medium, Hard")
+
+    diff = input("  Enter difficulty: ").strip()
+    hp_mod = input(" Enter HP Modifier (e.g., 1.0, 1.5): ").strip()
+    atk_mod = input("  Enter Attack Modifier (e.g., 1.0, 1.3): ").strip()
+
+    diff_lines = read_file_lines(files["enemy_difficulty"])
+    diff_lines = [l for l in diff_lines if not l.startswith(enemy_id + " | ")]
+    diff_lines.append(f"{enemy_id}|{difficulty}|{hp_mod}|{atk_mod}")
+    write_file_lines(files["enemy_difficulty"], diff_lines)
+
+    print("\n  Enemy difficulty updated!")
+    pause()
 
 
+def view_batt_histo():
+    clear_screen()
+    print_header("BATTLE HISTORY")
+
+    lines = read_file_lines(files["battle_history"])
+    if not lines:
+        print("  No battle history found.")
+    else:
+        print(f"""  {'ID':<5}{'Player':<18}{'Enemy':<20}{'Result':<8}
+        {'Date':<12}{'Gold':<8}{'Score':<8}""")
+        print("-" * 85)
+        for line in lines:
+            parts = parse_record(line)
+            if len(parts) >= 9:
+                print(f"""  {parts[0]:<5}{parts[2]:<18}{parts[4]:<20}{parts[5]:<8}
+                {parts[6]:<12}{parts[7]:<8}{parts[8]:<8}""")
+
+    pause()
 
 
+def report_gen_menu():
+    while True:
+        clear_screen()
+        print_header("REPORT GENERATION")
+        print("  Select a report to view player and dungeon-game records.")
+
+        print()
+        print("  [1] Player Statistics Report")
+        print("  [2] Battle Wins and Losses Report")
+        print("  [3] Enemies Defeated Report")
+        print("  [4] Player Score Ranking Report")
+        print("  [5] Boss Defeat Status Report")
+        print("  [6] Battle History Report")
+        print("  [7] Available Items Report")
+        print("  [8] Enemy Difficulty Report")
+        print("  [9] Back")
+        print("=" * 60)
+
+        choice = input("  Enter choice: ").strip()
 
 
+def player_stats_rep():
+    clear_screen()
+    print_header("PLAYER STATISTICS REPORT")
+    print(f"  Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    print("-" * 70)
 
-            
+    
 
-
-
-
-
-
-
-
- 
